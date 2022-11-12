@@ -2,21 +2,19 @@
 
 namespace App;
 
-include 'Ficha.php';
+interface interfazTablero{
 
-interface Tablero{
-
-    public function medidastableroX() : int; 
-    public function medidastableroY() : int; 
-    public function limpiar();
-    public function poner(int $x, int $y, Ficha $ficha);
-    public function sacar(int $x, int $y); 
-    public function exiteficha(int $x, int $y); 
-    public function devolver(int $x,int $y);
+    public function dimensionTableroX() : int; // dimension del tablero en el eje X
+    public function dimensionTableroY() : int; // dimension del tablero en el eje Y
+    public function limpiarTablero();//Vuelve al tablero en su estado original sin fichas
+    public function ponerFicha(int $x, int $y, Ficha $ficha);//Pone una ficha arriba de la ficha de mas altura en y
+    public function sacarFicha(int $x, int $y); //Se fija cual es la ficha de mas altura en el eje y, y la saca
+    public function hayFicha(int $x, int $y); //devuelve True o False dependiendo si hay una ficha en la posicion
+    public function devolverValorCasilla(int $x,int $y);//devuelve el valor de la casilla dada
 }
 
 
-class Tablero implements Tablero
+class Tablero implements interfazTablero
 {
     protected int $dimX;
     protected int $dimY;
@@ -26,52 +24,52 @@ class Tablero implements Tablero
 
     public function __construct (int $dim_x = 7, int $dim_y = 7) {
         if($dim_x <= 4 && $dim_y <= 4){
-            throw new Exception("Tablero de 4x4");
+            throw new Exception("El tablero debe ser de al menos 4 por 4");
         }
 
         $this->dimX = $dim_x;
         $this->dimY = $dim_y;
 
-        $this->limpiar();
+        $this->limpiarTablero();
 
     }
     
-    public function medidastableroX() : int{
+    public function dimensionTableroX() : int{
         return $this->dimX;
     }
 
-    public function medidastableroY() : int{
+    public function dimensionTableroY() : int{
         return $this->dimY;
     }
 
     
-    public function limpiar(){
-        for($x = 0; $x < $this->medidastableroX(); $x++){
-            for($y = 0; $y < $this->medidastableroY(); $y++){
+    public function limpiarTablero(){
+        for($x = 0; $x < $this->dimensionTableroX(); $x++){
+            for($y = 0; $y < $this->dimensionTableroY(); $y++){
                 $this->tablero[$x][$y] = "0";
             }
         }
     } 
     
 
-    public function poner(int $x, int $y, Ficha $ficha){
+    public function ponerFicha(int $x, int $y, Ficha $ficha){
 
-        if($x > $this->medidastableroX() || $y > $this->medidastableroY()){
-            throw new Exception("Ingrese posicion");
+        if($x > $this->dimensionTableroX() || $y > $this->dimensionTableroY()){
+            throw new Exception("ingrese valores de posicion dentro del rango del tablero");
         }
 
         $this->tablero[$x][$y] = $ficha;
     }
 
-    public function ponerUsuario(int $x,Ficha $ficha){
+    public function ponerFichaUsuario(int $x,Ficha $ficha){
 
-        if($this->exiteficha($x,0)){
-            throw new Exception("Columna llena");
+        if($this->hayFicha($x,0)){
+            throw new Exception("La columna esta llena");
         }
         
-        for($y = $this->medidastableroY() - 1; $y >= 0; $y--){
-            if($this->exiteficha($x,$y) != TRUE){
-                $this->poner($x,$y,$ficha);
+        for($y = $this->dimensionTableroY() - 1; $y >= 0; $y--){
+            if($this->hayFicha($x,$y) != TRUE){
+                $this->ponerFicha($x,$y,$ficha);
 
                 break;
             }
@@ -79,25 +77,25 @@ class Tablero implements Tablero
 
     }
 
+    //No se si hace falta una funcion para sacar fichas
+    public function sacarFicha(int $x, int $y){
 
-    public function sacar(int $x, int $y){
-
-        if($x > $this->medidastableroX() || $y > $this->medidastableroY()){
-            throw new Exception("Ingrese posicion");
+        if($x > $this->dimensionTableroX() || $y > $this->dimensionTableroY()){
+            throw new Exception("ingrese valores de posicion dentro del rango del tablero");
         }
 
         $this->tablero[$x][$y] = "0";
     }
 
-    public function sacarUsuario(int $x){
+    public function sacarFichaUsuario(int $x){
 
-        if($this->exiteficha($x,$this->medidastableroY() - 1) == FALSE){
-            throw new Exception("No hay fichas");
+        if($this->hayFicha($x,$this->dimensionTableroY() - 1) == FALSE){
+            throw new Exception("No hay fichas que sacar");
         }
 
-        for($y = 0; $y < $this->medidastableroY(); $y++){
-            if($this->exiteficha($x,$y) == TRUE){
-            
+        for($y = 0; $y < $this->dimensionTableroY(); $y++){
+            if($this->hayFicha($x,$y) == TRUE){
+                $this->sacarFicha($x,$y);
                 
                 break;
             }
@@ -106,8 +104,11 @@ class Tablero implements Tablero
 
     
     
-    public function exiteficha(int $x, int $y){
+    public function hayFicha(int $x, int $y){
 
+        if($x > $this->dimensionTableroX() || $y > $this->dimensionTableroY()){
+            throw new Exception("ingrese valores de posicion dentro del rango del tablero");
+        }
 
         if($this->tablero[$x][$y] != "0")
             return TRUE;
@@ -117,15 +118,35 @@ class Tablero implements Tablero
     
     
 
-    public function devolver(int $x,int $y){
+    public function devolverValorCasilla(int $x,int $y){
+
+        if($x > $this->dimensionTableroX() || $y > $this->dimensionTableroY()){
+            throw new Exception("ingrese valores de posicion dentro del rango del tablero");
+        }
 
         if($this->tablero[$x][$y] == "0"){
-            return $this->tablero[$x];
+            return $this->tablero[$x][$y];
         }
         else{
             return $this->tablero[$x][$y]->queColorSoy();
         }
     }
+
+
+    public function mostrarTablero(){
+        for($y = 0; $y < $this->dimensionTableroY(); $y++){
+            
+            for($x = 0;$x < $this->dimensionTableroX(); $x++){
+
+                printf("%8s",$this->devolverValorCasilla($x,$y));
+
+            }
+            
+            print("\n");
+        }
+        print("\n\n");
+    }
+
     
 
 }
